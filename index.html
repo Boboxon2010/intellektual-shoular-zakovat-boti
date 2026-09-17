@@ -1,18 +1,488 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <title>Intellektual Shoular Zakovat Boti</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f8fafc; padding: 50px; text-align: center; }
-        .card { background: #1e293b; padding: 40px; border-radius: 12px; display: inline-block; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h1 { color: #38bdf8; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zakovat Arena Pro v3.0 - Full Tournament System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --card-bg: rgba(22, 30, 49, 0.85);
+      --card-border: #1e2d4a;
+      --primary: #3b82f6;
+      --accent: #8b5cf6;
+      --gold: #f59e0b;
+      --danger: #ef4444;
+      --success: #10b981;
+      --text-bright: #f8fafc;
+      --text-dim: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+    body { background: var(--bg-dark); color: var(--text-bright); min-height: 100vh; padding: 1.2rem; }
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+    .brand { display: flex; align-items: center; gap: 0.8rem; }
+    .brand-icon { font-size: 2rem; color: var(--gold); }
+    .brand h1 { font-size: 1.4rem; font-weight: 800; }
+
+    .grid-layout { display: grid; grid-template-columns: 1fr 420px; gap: 1.2rem; }
+    @media (max-width: 1024px) { .grid-layout { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1.2rem;
+    }
+    .card-title {
+      font-size: 1rem; font-weight: 700; color: var(--primary);
+      margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    /* MAIN ARENA */
+    .arena-box {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 2px solid var(--primary);
+      border-radius: 16px;
+      padding: 1.8rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .question-category {
+      display: inline-block; padding: 0.3rem 0.8rem;
+      background: rgba(139, 92, 246, 0.2); border: 1px solid var(--accent);
+      color: var(--accent); border-radius: 20px; font-size: 0.8rem; font-weight: 700;
+    }
+
+    .question-text {
+      font-size: 1.3rem; font-weight: 600; line-height: 1.6;
+      margin: 1rem 0; min-height: 80px; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* DUAL TIMER DYNAMICS */
+    .timer-wrapper { display: flex; justify-content: center; gap: 2rem; margin: 1rem 0; }
+    .timer-box { text-align: center; }
+    .timer-circle {
+      width: 100px; height: 100px; border-radius: 50%;
+      border: 5px solid var(--card-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; font-weight: 800; color: var(--text-dim);
+    }
+    .timer-circle.thinking { border-color: var(--gold); color: var(--gold); animation: pulse 1s infinite alternate; }
+    .timer-circle.writing { border-color: var(--accent); color: var(--accent); animation: pulse 0.6s infinite alternate; }
+    .timer-circle.danger { border-color: var(--danger); color: var(--danger); }
+
+    @keyframes pulse {
+      from { box-shadow: 0 0 5px rgba(245, 158, 11, 0.2); }
+      to { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+    }
+
+    .status-badge {
+      font-size: 0.85rem; font-weight: 700; padding: 0.4rem 1rem; border-radius: 20px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); display: inline-block;
+    }
+
+    .btn-group { display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 1rem; }
+    .btn {
+      padding: 0.65rem 1.2rem; border-radius: 8px; border: none;
+      font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-gold { background: var(--gold); color: #000; }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--card-border); color: var(--text-bright); }
+    .btn:hover { opacity: 0.9; }
+
+    .answer-box {
+      margin-top: 1.2rem; padding: 1rem; background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success); border-radius: 10px; display: none; color: var(--success); font-weight: 700;
+    }
+
+    /* ANSWER SUBMISSION FORM */
+    .submit-box {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 10px; padding: 1rem; margin-top: 1rem;
+    }
+    .input-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    input, select {
+      padding: 0.6rem; background: var(--bg-dark); border: 1px solid var(--card-border);
+      color: var(--text-bright); border-radius: 6px; outline: none; font-size: 0.85rem;
+    }
+    input { flex: 1; }
+
+    /* SUBMISSION BOARD */
+    .sub-list { list-style: none; font-size: 0.85rem; max-height: 220px; overflow-y: auto; }
+    .sub-item {
+      background: rgba(30, 41, 59, 0.5); border: 1px solid var(--card-border);
+      border-radius: 6px; padding: 0.6rem 0.8rem; margin-bottom: 0.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* TEAM SCOREBOARD */
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.8rem; }
+    .team-card {
+      background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border);
+      border-radius: 8px; padding: 0.8rem; text-align: center;
+    }
+    .team-score { font-size: 1.6rem; font-weight: 800; color: var(--gold); }
+  </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Intellektual Shoular Zakovat Boti</h1>
-        <p>Ushbu loyiha muvaffaqiyatli dasturlandi va lokal tizimda ishga tushirildi.</p>
+
+<div class="container">
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-brain brand-icon"></i>
+      <div>
+        <h1>ZAKOVAT ARENA PRO v3.0</h1>
+        <p>Dual-Timer & Live Answer Checker System</p>
+      </div>
     </div>
+    <div id="gameStatusBadge" class="status-badge">
+      <i class="fa-solid fa-circle-dot" style="color:var(--text-dim);"></i> Tayyor rejimda
+    </div>
+  </header>
+
+  <div class="grid-layout">
+    <!-- LEFT COLUMN: ARENA & SUBMISSION -->
+    <div>
+      <div class="arena-box">
+        <span class="question-category" id="qCategory">Tarix va Mantiq</span>
+        <div class="question-text" id="qText">Savol yuklanmoqda...</div>
+
+        <!-- DUAL TIMERS -->
+        <div class="timer-wrapper">
+          <div class="timer-box">
+            <div class="timer-circle" id="thinkTimer">60</div>
+            <span style="font-size:0.75rem; color:var(--text-dim); margin-top:0.3rem; display:block;">1-BOSQICH (O'YLASH)</span>
+          </div>
+          <div class="timer-box">
+            <div class="timer-circle" id="writeTimer">30</div>
+            <span style="font-size:0.75rem; color:var(--text-dim); margin-top:0.3rem; display:block;">2-BOSQICH (JAVOB YOZISH)</span>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-gold" onclick="startThinkingPhase()"><i class="fa-solid fa-play"></i> 60-soniya O'ylash</button>
+          <button class="btn btn-accent" onclick="startWritingPhase()"><i class="fa-solid fa-pen-to-square"></i> 30-soniya Javob Topshirish</button>
+          <button class="btn btn-outline" onclick="pauseAllTimers()"><i class="fa-solid fa-pause"></i> Pauza</button>
+          <button class="btn btn-primary" onclick="revealAnswer()"><i class="fa-solid fa-key"></i> Javobni Ochish</button>
+          <button class="btn btn-outline" onclick="nextQuestion()"><i class="fa-solid fa-forward"></i> Keyingi Savol</button>
+        </div>
+
+        <div class="answer-box" id="answerBox">
+          Aniq Javob: <span id="answerText">-</span>
+        </div>
+      </div>
+
+      <!-- LIVE ANSWER INPUT SECTION -->
+      <div class="card" style="margin-top:1rem;">
+        <div class="card-title"><i class="fa-solid fa-paper-plane"></i> Jamoalar Javobini Kiritish (Live Input)</div>
+        <div class="submit-box">
+          <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+            <select id="teamSelect" style="width:180px;">
+              <!-- Teams populated dynamically -->
+            </select>
+            <input type="text" id="teamAnswerInput" placeholder="Jamoa javobini shu yerga yozing..." onkeypress="if(event.key==='Enter') submitAnswer()" />
+            <button class="btn btn-primary" onclick="submitAnswer()"><i class="fa-solid fa-check"></i> Yuborish</button>
+          </div>
+          <span style="font-size:0.75rem; color:var(--text-dim);">
+            * Javoblar avtomatik to'g'ri/xatolikka solishtiriladi va 30 soniyalik vaqt davomida qabul qilinadi.
+          </span>
+        </div>
+      </div>
+
+      <!-- TEAM SCORES -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-trophy"></i> Jamoalar Reyting Tablosi</div>
+        <div class="team-grid" id="teamGrid"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: SUBMISSION MONITOR & LOGS -->
+    <div>
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-inbox"></i> Kelib Tushgan Javoblar</div>
+        <ul class="sub-list" id="submissionList">
+          <li style="color:var(--text-dim); font-size:0.8rem; text-align:center;">Hozircha javoblar yo'q</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Shou Yordamchilari (Lifelines)</div>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          <button class="btn btn-outline" onclick="useLifeline('50/50')"><i class="fa-solid fa-arrows-split-up-and-left"></i> 50/50 Mantiqiy Ishora</button>
+          <button class="btn btn-outline" onclick="useLifeline('Ekspert')"><i class="fa-solid fa-user-graduate"></i> Ekspert Maslahati</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-database"></i> Savollar Bazi</div>
+        <div style="font-size:0.85rem; color:var(--text-dim); margin-bottom:0.8rem;">
+          Jami Savollar: <strong style="color:var(--primary);" id="totalQuestions">0</strong> ta
+        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="addNewQuestionPrompt()">
+          <i class="fa-solid fa-plus"></i> Yangi Savol Qo'shish
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // QUESTIONS DATABASE
+  const questionsDB = [
+    {
+      category: "Mantiqiy Topishmoq",
+      question: "Ushbu narsa qanchalik ko'p bo'lsa, uni ko'rish shunchalik qiyinlashadi. U nima?",
+      answer: "Qorong'ulik",
+      keywords: ["qorong'ulik", "qorongulik", "qorong'ilik", "qorongilik"]
+    },
+    {
+      category: "Tarixiy Fakt",
+      question: "19-asrgacha Yevropada ushbu poyabzal turi faqat chap yoki o'ng deb ajratilmasdan, ikkala oyatga ham birxil kiyilavergan. Bu qaysi poyabzal?",
+      answer: "Etik",
+      keywords: ["etik", "etiq", "boot", "boots"]
+    },
+    {
+      category: "Adabiyot",
+      question: "Ushbu mashhur yozuvchi o'z asarlarini hech qachon o'tirib yozmagan, doimo tik turgan holda yozgan. Bu kim?",
+      answer: "Ernest Xeminguyey",
+      keywords: ["xeminguyey", "hemingway", "ernest"]
+    }
+  ];
+
+  const teams = [
+    { name: "Bilimdonlar", score: 3 },
+    { name: "Genius Klub", score: 5 },
+    { name: "Tafakkur", score: 2 }
+  ];
+
+  let currentQIndex = 0;
+  let thinkTimerInterval = null;
+  let writeTimerInterval = null;
+  let thinkTime = 60;
+  let writeTime = 30;
+  let audioCtx = null;
+  let isWritingActive = false;
+  let submissions = [];
+
+  // AUDIO SYNTHESIZER
+  function playBeep(freq = 440, type = 'sine', duration = 0.1) {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  // STATUS BADGE UPDATE
+  function updateStatus(text, colorClass) {
+    const badge = document.getElementById('gameStatusBadge');
+    badge.innerHTML = `<i class="fa-solid fa-circle-dot" style="color:${colorClass}"></i> ${text}`;
+  }
+
+  // PHASE 1: 60 SEC THINKING TIMER
+  function startThinkingPhase() {
+    pauseAllTimers();
+    resetTimerUI();
+    isWritingActive = false;
+    updateStatus("1-Bosqich: 60 Soniyalik O'ylash vaqti ketmoqda...", "var(--gold)");
+    document.getElementById('thinkTimer').classList.add('thinking');
+
+    thinkTimerInterval = setInterval(() => {
+      thinkTime--;
+      document.getElementById('thinkTimer').innerText = thinkTime;
+      if (thinkTime <= 10) {
+        document.getElementById('thinkTimer').classList.add('danger');
+        playBeep(600, 'square', 0.1);
+      } else {
+        playBeep(440, 'sine', 0.05);
+      }
+
+      if (thinkTime <= 0) {
+        clearInterval(thinkTimerInterval);
+        document.getElementById('thinkTimer').classList.remove('thinking', 'danger');
+        playBeep(200, 'triangle', 1.0);
+        // Automatically start Phase 2 (Writing Phase)
+        startWritingPhase();
+      }
+    }, 1000);
+  }
+
+  // PHASE 2: 30 SEC WRITING / SUBMISSION TIMER
+  function startWritingPhase() {
+    pauseAllTimers();
+    isWritingActive = true;
+    updateStatus("2-Bosqich: 30 Soniyalik Javob topshirish vaqti!", "var(--accent)");
+    document.getElementById('writeTimer').classList.add('writing');
+
+    writeTimerInterval = setInterval(() => {
+      writeTime--;
+      document.getElementById('writeTimer').innerText = writeTime;
+      
+      if (writeTime <= 5) {
+        document.getElementById('writeTimer').classList.add('danger');
+        playBeep(880, 'square', 0.15); // Fast alert
+      } else {
+        playBeep(520, 'sine', 0.05);
+      }
+
+      if (writeTime <= 0) {
+        clearInterval(writeTimerInterval);
+        isWritingActive = false;
+        document.getElementById('writeTimer').classList.remove('writing', 'danger');
+        playBeep(150, 'sawtooth', 1.2); // Time's up gong
+        updateStatus("Vaqt Tugadi! Javoblar yopildi.", "var(--danger)");
+      }
+    }, 1000);
+  }
+
+  function pauseAllTimers() {
+    if (thinkTimerInterval) clearInterval(thinkTimerInterval);
+    if (writeTimerInterval) clearInterval(writeTimerInterval);
+    document.getElementById('thinkTimer').classList.remove('thinking');
+    document.getElementById('writeTimer').classList.remove('writing');
+  }
+
+  function resetTimerUI() {
+    thinkTime = 60; writeTime = 30;
+    document.getElementById('thinkTimer').innerText = 60;
+    document.getElementById('writeTimer').innerText = 30;
+    document.getElementById('thinkTimer').classList.remove('danger');
+    document.getElementById('writeTimer').classList.remove('danger');
+  }
+
+  // SUBMIT & CHECK ANSWER LOGIC
+  function submitAnswer() {
+    if (!isWritingActive) {
+      alert("⚠️ Javob topshirish vaqti faol emas! (30 soniyalik taymerni ishga tushiring)");
+      return;
+    }
+
+    const teamName = document.getElementById('teamSelect').value;
+    const inputVal = document.getElementById('teamAnswerInput').value.trim();
+
+    if (!inputVal) return;
+
+    const currentQ = questionsDB[currentQIndex];
+    const isCorrect = currentQ.keywords.some(kw => inputVal.toLowerCase().includes(kw.toLowerCase()));
+
+    // Record submission
+    const subObj = { team: teamName, answer: inputVal, isCorrect: isCorrect, time: new Date().toLocaleTimeString() };
+    submissions.unshift(subObj);
+
+    // Auto-increase score if correct
+    if (isCorrect) {
+      const teamObj = teams.find(t => t.name === teamName);
+      if (teamObj) teamObj.score += 1;
+      renderTeams();
+      playBeep(800, 'sine', 0.3);
+    }
+
+    renderSubmissions();
+    document.getElementById('teamAnswerInput').value = '';
+  }
+
+  function renderSubmissions() {
+    const list = document.getElementById('submissionList');
+    list.innerHTML = '';
+    submissions.forEach(s => {
+      const icon = s.isCorrect 
+        ? `<i class="fa-solid fa-circle-check" style="color:var(--success);"></i>` 
+        : `<i class="fa-solid fa-circle-xmark" style="color:var(--danger);"></i>`;
+      list.innerHTML += `
+        <li class="sub-item">
+          <div>
+            <strong>${s.team}</strong>: "${s.answer}"
+            <div style="font-size:0.7rem; color:var(--text-dim);">${s.time}</div>
+          </div>
+          <div>${icon}</div>
+        </li>
+      `;
+    });
+  }
+
+  // QUESTION MANAGEMENT
+  function loadQuestion(index) {
+    pauseAllTimers();
+    resetTimerUI();
+    submissions = [];
+    renderSubmissions();
+    
+    const q = questionsDB[index];
+    document.getElementById('qCategory').innerText = q.category;
+    document.getElementById('qText').innerText = q.question;
+    document.getElementById('answerText').innerText = q.answer;
+    document.getElementById('answerBox').style.display = 'none';
+    updateStatus(`Savol #${index + 1} tayyor.`, "var(--primary)");
+  }
+
+  function revealAnswer() {
+    document.getElementById('answerBox').style.display = 'block';
+    playBeep(587, 'sine', 0.4);
+  }
+
+  function nextQuestion() {
+    currentQIndex = (currentQIndex + 1) % questionsDB.length;
+    loadQuestion(currentQIndex);
+  }
+
+  // RENDER TEAMS
+  function renderTeams() {
+    const grid = document.getElementById('teamGrid');
+    const select = document.getElementById('teamSelect');
+    grid.innerHTML = ''; select.innerHTML = '';
+
+    teams.forEach((t, i) => {
+      grid.innerHTML += `
+        <div class="team-card">
+          <div style="font-size:0.8rem; font-weight:700; color:var(--text-dim);">${t.name}</div>
+          <div class="team-score">${t.score}</div>
+        </div>
+      `;
+      select.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+    });
+  }
+
+  function useLifeline(type) {
+    alert(`💡 ${type} Ishorasi: Javob kalit so'zlardan birini o'z ichiga oladi!`);
+  }
+
+  function addNewQuestionPrompt() {
+    const q = prompt("Yangi Zakovat savoli:");
+    const a = prompt("To'g'ri javob:");
+    const kw = prompt("Kalit so'zlar (vergul bilan):");
+    if (q && a) {
+      questionsDB.push({ category: "Yangi Savol", question: q, answer: a, keywords: kw ? kw.split(',') : [a] });
+      document.getElementById('totalQuestions').innerText = questionsDB.length;
+      alert("Savol muvaffaqiyatli qo'shildi!");
+    }
+  }
+
+  // INITIALIZE
+  document.getElementById('totalQuestions').innerText = questionsDB.length;
+  renderTeams();
+  loadQuestion(0);
+</script>
+
 </body>
 </html>
